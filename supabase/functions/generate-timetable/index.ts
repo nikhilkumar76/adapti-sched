@@ -265,13 +265,103 @@ class TimetableGenerator {
   }
 }
 
+// Input validation
+function validateConstraints(constraints: any): string | null {
+  if (!constraints || typeof constraints !== 'object') {
+    return "Invalid constraints format";
+  }
+
+  if (!Array.isArray(constraints.teachers) || constraints.teachers.length === 0) {
+    return "At least one teacher is required";
+  }
+
+  if (!Array.isArray(constraints.subjects) || constraints.subjects.length === 0) {
+    return "At least one subject is required";
+  }
+
+  if (!Array.isArray(constraints.rooms) || constraints.rooms.length === 0) {
+    return "At least one room is required";
+  }
+
+  if (!Array.isArray(constraints.classes) || constraints.classes.length === 0) {
+    return "At least one class is required";
+  }
+
+  if (typeof constraints.daysPerWeek !== 'number' || constraints.daysPerWeek < 1 || constraints.daysPerWeek > 7) {
+    return "Days per week must be between 1 and 7";
+  }
+
+  if (typeof constraints.slotsPerDay !== 'number' || constraints.slotsPerDay < 1 || constraints.slotsPerDay > 12) {
+    return "Slots per day must be between 1 and 12";
+  }
+
+  // Validate teachers
+  for (const teacher of constraints.teachers) {
+    if (!teacher.name || typeof teacher.name !== 'string' || teacher.name.length > 100) {
+      return "Invalid teacher name";
+    }
+    if (!Array.isArray(teacher.subjects)) {
+      return "Teacher subjects must be an array";
+    }
+  }
+
+  // Validate subjects
+  for (const subject of constraints.subjects) {
+    if (!subject.name || typeof subject.name !== 'string' || subject.name.length > 100) {
+      return "Invalid subject name";
+    }
+    if (typeof subject.hoursPerWeek !== 'number' || subject.hoursPerWeek < 1 || subject.hoursPerWeek > 20) {
+      return "Hours per week must be between 1 and 20";
+    }
+  }
+
+  // Validate rooms
+  for (const room of constraints.rooms) {
+    if (!room.name || typeof room.name !== 'string' || room.name.length > 100) {
+      return "Invalid room name";
+    }
+    if (typeof room.capacity !== 'number' || room.capacity < 1 || room.capacity > 1000) {
+      return "Room capacity must be between 1 and 1000";
+    }
+  }
+
+  // Validate classes
+  for (const cls of constraints.classes) {
+    if (!cls.name || typeof cls.name !== 'string' || cls.name.length > 100) {
+      return "Invalid class name";
+    }
+    if (typeof cls.size !== 'number' || cls.size < 1 || cls.size > 1000) {
+      return "Class size must be between 1 and 1000";
+    }
+  }
+
+  return null;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const constraints: Constraint = await req.json();
+    const rawConstraints = await req.json();
+    
+    // Validate input
+    const validationError = validateConstraints(rawConstraints);
+    if (validationError) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: validationError,
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const constraints: Constraint = rawConstraints;
 
     console.log('Received constraints:', {
       teachers: constraints.teachers.length,

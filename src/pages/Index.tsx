@@ -1,8 +1,7 @@
 import { Hero } from "@/components/Hero";
 import { Features } from "@/components/Features";
 import { HowItWorks } from "@/components/HowItWorks";
-import { TimetableDemo } from "@/components/TimetableDemo";
-import { TimetableGenerator } from "@/components/TimetableGenerator";
+import { TimetableChatbot } from "@/components/TimetableChatbot";
 
 const Index = () => {
   return (
@@ -10,8 +9,7 @@ const Index = () => {
       <Hero />
       <Features />
       <HowItWorks />
-      <TimetableGenerator />
-      <TimetableDemo />
+      <TimetableChatbot />
     </main>
   );
 };
